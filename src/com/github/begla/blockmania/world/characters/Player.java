@@ -32,11 +32,11 @@ import com.github.begla.blockmania.utilities.MathHelper;
 import com.github.begla.blockmania.world.chunk.Chunk;
 import com.github.begla.blockmania.world.interfaces.BlockObserver;
 import com.github.begla.blockmania.world.main.World;
-import javolution.util.FastList;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.input.Mouse;
 
 import javax.vecmath.Vector3f;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
 
@@ -48,8 +48,13 @@ import java.util.logging.Level;
  */
 public final class Player extends Character {
 
+    private static final double MOUSE_SENS = (Double) ConfigurationManager.getInstance().getConfig().get("Controls.mouseSens");
+    private static final boolean DEMO_FLIGHT = (Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.demoFlight");
+    private static final boolean GOD_MODE = (Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.godMode");
+    private static final double WALKING_SPEED = (Double) ConfigurationManager.getInstance().getConfig().get("Player.walkingSpeed");
+
     /* OBSERVERS */
-    private FastList<BlockObserver> _observers = new FastList<BlockObserver>();
+    private ArrayList<BlockObserver> _observers = new ArrayList<BlockObserver>();
 
     /* PROPERTIES */
     private byte _selectedBlockType = 1;
@@ -68,10 +73,8 @@ public final class Player extends Character {
     }
 
     public void update() {
-        _godMode = (Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.godMode");
-        _walkingSpeed = (Double) ConfigurationManager.getInstance().getConfig().get("Player.walkingSpeed") + Math.abs(calcBobbingOffset((float) Math.PI / 2f, 0.005f, 2.0f));
-        _runningFactor = (Double) ConfigurationManager.getInstance().getConfig().get("Player.runningFactor");
-        _jumpIntensity = (Double) ConfigurationManager.getInstance().getConfig().get("Player.jumpIntensity");
+        _godMode = GOD_MODE;
+        _walkingSpeed = WALKING_SPEED + Math.abs(calcBobbingOffset((float) Math.PI / 2f, 0.005f, 2.0f));
 
         updateCameras();
         super.update();
@@ -84,13 +87,7 @@ public final class Player extends Character {
         if ((Boolean) ConfigurationManager.getInstance().getConfig().get("HUD.placingBox")) {
             if (is != null) {
                 if (BlockManager.getInstance().getBlock(_parent.getWorldProvider().getBlockAtPosition(is.getBlockPosition().toVector3f())).isRenderBoundingBox()) {
-
-                    Vector3f v = is.getBlockPosition().toVector3f();
-                    v.x -= _parent.getWorldProvider().getRenderingReferencePoint().x;
-                    v.y -= _parent.getWorldProvider().getRenderingReferencePoint().y;
-                    v.z -= _parent.getWorldProvider().getRenderingReferencePoint().z;
-
-                    Block.AABBForBlockAt(v).render();
+                    Block.AABBForBlockAt(is.getBlockPosition().toVector3f()).render();
                 }
             }
         }
@@ -105,7 +102,7 @@ public final class Player extends Character {
     public void updateCameras() {
         _firstPersonCamera.getPosition().set(calcEyeOffset());
 
-        if (!((Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.godMode"))) {
+        if (!GOD_MODE) {
             _firstPersonCamera.setBobbingRotationOffsetFactor(calcBobbingOffset(0.0f, 0.01f, 2.0f));
             _firstPersonCamera.setBobbingVerticalOffsetFactor(calcBobbingOffset((float) Math.PI / 4f, 0.025f, 2.75f));
         } else {
@@ -113,18 +110,18 @@ public final class Player extends Character {
             _firstPersonCamera.setBobbingVerticalOffsetFactor(0.0);
         }
 
-        if (!((Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.demoFlight") && (Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.godMode"))) {
+        if (!(DEMO_FLIGHT && GOD_MODE)) {
             _firstPersonCamera.getViewingDirection().set(getViewingDirection());
         } else {
-            Vector3f viewingTarget = new Vector3f(getPosition().x, 40, getPosition().z + 128);
+            Vector3f viewingTarget = new Vector3f(getPosition().x, 40, getPosition().z - 128);
             _firstPersonCamera.getViewingDirection().sub(viewingTarget, getPosition());
         }
     }
 
     public void updatePosition() {
         // DEMO MODE
-        if ((Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.demoFlight") && (Boolean) ConfigurationManager.getInstance().getConfig().get("System.Debug.godMode")) {
-            getPosition().z += (Double) ConfigurationManager.getInstance().getConfig().get("Player.walkingSpeed");
+        if (DEMO_FLIGHT && GOD_MODE) {
+            getPosition().z -= 0.2f;
 
             int maxHeight = _parent.maxHeightAt((int) getPosition().x, (int) getPosition().z + 8) + 16;
 
@@ -148,7 +145,8 @@ public final class Player extends Character {
      * @return Intersection point of the targeted block
      */
     public RayBlockIntersection.Intersection calcSelectedBlock() {
-        FastList<RayBlockIntersection.Intersection> inters = new FastList<RayBlockIntersection.Intersection>();
+        ArrayList<RayBlockIntersection.Intersection> inters = new ArrayList<RayBlockIntersection.Intersection>();
+
         for (int x = -3; x <= 3; x++) {
             for (int y = -3; y <= 3; y++) {
                 for (int z = -3; z <= 3; z++) {
@@ -160,7 +158,7 @@ public final class Player extends Character {
                     }
 
                     // The ray originates from the "player's eye"
-                    FastList<RayBlockIntersection.Intersection> iss = RayBlockIntersection.executeIntersection(_parent.getWorldProvider(), (int) getPosition().x + x, (int) getPosition().y + y, (int) getPosition().z + z, calcEyePosition(), _viewingDirection);
+                    ArrayList<RayBlockIntersection.Intersection> iss = RayBlockIntersection.executeIntersection(_parent.getWorldProvider(), (int) getPosition().x + x, (int) getPosition().y + y, (int) getPosition().z + z, calcEyePosition(), _viewingDirection);
 
                     if (iss != null) {
                         inters.addAll(iss);
@@ -202,7 +200,7 @@ public final class Player extends Character {
                     return;
                 }
 
-                getParent().getWorldProvider().setBlock(blockPos.x, blockPos.y, blockPos.z, type, true, false);
+                getParent().getWorldProvider().setBlock(blockPos.x, blockPos.y, blockPos.z, type, true, true, false);
                 AudioManager.getInstance().getAudio("PlaceBlock").playAsSoundEffect(0.8f + (float) MathHelper.fastAbs(_parent.getWorldProvider().getRandom().randomDouble()) * 0.2f, 0.7f + (float) MathHelper.fastAbs(_parent.getWorldProvider().getRandom().randomDouble()) * 0.3f, false);
 
                 int chunkPosX = MathHelper.calcChunkPosX(blockPos.x);
@@ -220,7 +218,7 @@ public final class Player extends Character {
                 Vector3f origin = blockPos.toVector3f();
 
                 int counter = 0;
-                for (int i = 0; i < 1024; i++) {
+                for (int i = 0; i < 512; i++) {
                     Vector3f direction = new Vector3f((float) _parent.getWorldProvider().getRandom().randomDouble(), (float) _parent.getWorldProvider().getRandom().randomDouble(), (float) _parent.getWorldProvider().getRandom().randomDouble());
                     direction.normalize();
 
@@ -234,7 +232,7 @@ public final class Player extends Character {
                         byte currentBlockType = getParent().getWorldProvider().getBlock((int) target.x, (int) target.y, (int) target.z);
 
                         if (currentBlockType != 0x0) {
-                            getParent().getWorldProvider().setBlock((int) target.x, (int) target.y, (int) target.z, (byte) 0x0, true, true);
+                            getParent().getWorldProvider().setBlock((int) target.x, (int) target.y, (int) target.z, (byte) 0x0, true, false, true);
 
                             if (!BlockManager.getInstance().getBlock(currentBlockType).isTranslucent() && counter % 4 == 0)
                                 _parent.getRigidBlocksRenderer().addBlock(target, currentBlockType);
@@ -244,7 +242,6 @@ public final class Player extends Character {
                     }
                 }
 
-                _parent.getRigidBlocksRenderer().explode();
                 AudioManager.getInstance().getAudio("RemoveBlock").playAsSoundEffect(0.8f + (float) MathHelper.fastAbs(_parent.getWorldProvider().getRandom().randomDouble()) * 0.2f, 0.7f + (float) MathHelper.fastAbs(_parent.getWorldProvider().getRandom().randomDouble()) * 0.3f, false);
             }
         }
@@ -261,16 +258,16 @@ public final class Player extends Character {
             if (is != null) {
                 BlockPosition blockPos = is.getBlockPosition();
                 byte currentBlockType = getParent().getWorldProvider().getBlock(blockPos.x, blockPos.y, blockPos.z);
-                getParent().getWorldProvider().setBlock(blockPos.x, blockPos.y, blockPos.z, (byte) 0x0, true, true);
+                getParent().getWorldProvider().setBlock(blockPos.x, blockPos.y, blockPos.z, (byte) 0x0, true, false, true);
 
                 // Remove the upper block if it's a billboard
                 byte upperBlockType = getParent().getWorldProvider().getBlock(blockPos.x, blockPos.y + 1, blockPos.z);
                 if (BlockManager.getInstance().getBlock(upperBlockType).getBlockForm() == Block.BLOCK_FORM.BILLBOARD) {
-                    getParent().getWorldProvider().setBlock(blockPos.x, blockPos.y + 1, blockPos.z, (byte) 0x0, true, true);
+                    getParent().getWorldProvider().setBlock(blockPos.x, blockPos.y + 1, blockPos.z, (byte) 0x0, true, false, true);
                 }
 
                 _parent.getBlockParticleEmitter().setOrigin(blockPos.toVector3f());
-                _parent.getBlockParticleEmitter().emitParticles(256, currentBlockType);
+                _parent.getBlockParticleEmitter().emitParticles(128, currentBlockType);
                 AudioManager.getInstance().getAudio("RemoveBlock").playAsSoundEffect(0.6f + (float) MathHelper.fastAbs(_parent.getWorldProvider().getRandom().randomDouble()) * 0.2f, 0.5f + (float) MathHelper.fastAbs(_parent.getWorldProvider().getRandom().randomDouble()) * 0.3f, false);
 
                 if (createPhysBlock && !BlockManager.getInstance().getBlock(currentBlockType).isTranslucent()) {
@@ -390,10 +387,8 @@ public final class Player extends Character {
         double dx = Mouse.getDX();
         double dy = Mouse.getDY();
 
-        double mouseSens = (Double) ConfigurationManager.getInstance().getConfig().get("Controls.mouseSens");
-
-        yaw(dx * mouseSens);
-        pitch(dy * mouseSens);
+        yaw(dx * MOUSE_SENS);
+        pitch(dy * MOUSE_SENS);
 
         if (Keyboard.isKeyDown(Keyboard.KEY_W)) {
             walkForward();
@@ -439,9 +434,7 @@ public final class Player extends Character {
         return String.format("player (x: %.2f, y: %.2f, z: %.2f | x: %.2f, y: %.2f, z: %.2f | b: %d | gravity: %.2f | x: %.2f, y: %.2f, z: %.2f)", getPosition().x, getPosition().y, getPosition().z, _viewingDirection.x, _viewingDirection.y, _viewingDirection.z, _selectedBlockType, _gravity, _movementDirection.x, _movementDirection.y, _movementDirection.z);
     }
 
-    protected AABB generateAABBForPosition
-            (Vector3f
-                     p) {
+    protected AABB generateAABBForPosition(Vector3f p) {
         return new AABB(p, new Vector3f(.3f, 0.8f, .3f));
     }
 

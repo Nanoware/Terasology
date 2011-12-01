@@ -20,12 +20,12 @@ import com.github.begla.blockmania.game.Blockmania;
 import com.github.begla.blockmania.utilities.MathHelper;
 import com.github.begla.blockmania.world.interfaces.ChunkProvider;
 import com.github.begla.blockmania.world.main.LocalWorldProvider;
-import javolution.util.FastList;
-import javolution.util.FastMap;
 
 import javax.vecmath.Vector3f;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 
 /**
@@ -35,11 +35,12 @@ import java.util.logging.Level;
  */
 public final class LocalChunkCache implements ChunkProvider {
 
-    private static boolean _running = false;
-
+    private static final boolean SAVE_CHUNKS = (Boolean) ConfigurationManager.getInstance().getConfig().get("System.saveChunks");
     private static final int CACHE_SIZE = (Integer) ConfigurationManager.getInstance().getConfig().get("System.chunkCacheSize");
 
-    private final FastMap<Integer, Chunk> _chunkCache = new FastMap<Integer, Chunk>().shared();
+    private static boolean _running = false;
+
+    private final ConcurrentHashMap<Integer, Chunk> _chunkCache = new ConcurrentHashMap<Integer, Chunk>();
     private final LocalWorldProvider _parent;
 
     /**
@@ -101,17 +102,19 @@ public final class LocalChunkCache implements ChunkProvider {
 
         Runnable r = new Runnable() {
             public void run() {
-                FastList<Chunk> cachedChunks = new FastList<Chunk>(_chunkCache.values());
+                ArrayList<Chunk> cachedChunks = new ArrayList<Chunk>(_chunkCache.values());
                 Collections.sort(cachedChunks);
 
-                while (cachedChunks.size() > CACHE_SIZE) {
-                    Chunk chunkToDelete = cachedChunks.removeLast();
-                    // Write the chunk to disk (but do not remove it from the cache just jet)
-                    writeChunkToDisk(chunkToDelete);
-                    // When the chunk is written, finally remove it from the cache
-                    _chunkCache.values().remove(chunkToDelete);
+                synchronized (_chunkCache) {
+                    while (cachedChunks.size() > CACHE_SIZE) {
+                        Chunk chunkToDelete = cachedChunks.remove(cachedChunks.size() - 1);
+                        // Write the chunk to disk (but do not remove it from the cache just jet)
+                        writeChunkToDisk(chunkToDelete);
+                        // When the chunk is written, finally remove it from the cache
+                        _chunkCache.values().remove(chunkToDelete);
 
-                    chunkToDelete.dispose();
+                        chunkToDelete.dispose();
+                    }
                 }
 
                 _running = false;
@@ -144,8 +147,8 @@ public final class LocalChunkCache implements ChunkProvider {
      *
      * @param c The chunk to save
      */
-    private void writeChunkToDisk(Chunk c) {
-        if (c.isFresh() || !(Boolean) ConfigurationManager.getInstance().getConfig().get("System.saveChunks")) {
+    private synchronized void writeChunkToDisk(Chunk c) {
+        if (c.isFresh() || !SAVE_CHUNKS) {
             return;
         }
 
@@ -176,7 +179,7 @@ public final class LocalChunkCache implements ChunkProvider {
      * @param chunkPos The position of the chunk
      * @return The loaded chunk, null if none was found
      */
-    private Chunk loadChunkFromDisk(Vector3f chunkPos) {
+    private synchronized Chunk loadChunkFromDisk(Vector3f chunkPos) {
         File f = new File(_parent.getWorldSavePath() + "/" + Chunk.getChunkSavePathForPosition(chunkPos) + "/" + Chunk.getChunkFileNameForPosition(chunkPos));
 
         if (!f.exists())

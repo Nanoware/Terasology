@@ -1,10 +1,8 @@
-#version 120
-
 uniform sampler2D textureAtlas;
+uniform sampler2D textureWater;
+uniform sampler2D textureLava;
 
 uniform float tick;
-
-const float gamma = 2.2;
 uniform float daylight = 1.0;
 uniform bool swimming;
 
@@ -15,11 +13,11 @@ uniform vec4 playerPosition;
 varying float fog;
 
 vec4 srgbToLinear(vec4 color){
-    return pow(color, vec4(1.0 / gamma));
+    return pow(color, vec4(1.0 / GAMMA));
 }
 
 vec4 linearToSrgb(vec4 color){
-    return pow(color, vec4(gamma));
+    return pow(color, vec4(GAMMA));
 }
 
 void main(){
@@ -30,6 +28,7 @@ void main(){
     vec4 texCoord = gl_TexCoord[0];
 
     float daylightTrans = pow(0.86, (1.0-daylight)*15.0);
+    vec4 color;
 
     if (texCoord.x >= waterCoordinate.x && texCoord.x < waterCoordinate.y && texCoord.y >= waterCoordinate.z && texCoord.y < waterCoordinate.w) {
         texCoord.x -= waterCoordinate.x;
@@ -39,6 +38,8 @@ void main(){
         texCoord.y /= 64;
 
         texCoord.y += mod(tick,48) * 1/64;
+
+        color = texture2D(textureWater, vec2(texCoord));
     } else if (texCoord.x >= lavaCoordinate.x && texCoord.x < lavaCoordinate.y && texCoord.y >= lavaCoordinate.z && texCoord.y < lavaCoordinate.w) {
         texCoord.x -= lavaCoordinate.x;
         texCoord.x *= 16;
@@ -47,9 +48,13 @@ void main(){
         texCoord.y /= 128;
 
         texCoord.y += mod(tick,100) * 1/128;
+
+        color = texture2D(textureLava, vec2(texCoord));
+    } else {
+        color = texture2D(textureAtlas, vec2(texCoord));
     }
 
-    vec4 color = texture2D(textureAtlas, vec2(texCoord));
+
     color = srgbToLinear(color);
 
     if (color.a < 0.1)
@@ -87,7 +92,7 @@ void main(){
     color.xyz *= clamp(daylightColorValue + blocklightColorValue * (1.0-daylightValue), 0, 1);
 
     if (!swimming) {
-        gl_FragColor.rgb = linearToSrgb(mix(color, vec4(0.89,0.945,1.0,1.0) * daylightTrans, clamp(fog, 0.0, 0.80))).rgb;
+        gl_FragColor.rgb = linearToSrgb(mix(color, vec4(1.0,1.0,1.0,1.0) * daylightTrans, clamp(fog, 0.0, 0.5))).rgb;
         gl_FragColor.a = color.a;
     } else {
         color.rg *= 0.6;

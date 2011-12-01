@@ -88,19 +88,19 @@ public class ChunkGeneratorTerrain extends ChunkGenerator {
 
                     double dens = densityMap[x][y][z];
 
-                    if ((dens >= 0 && dens < 16)) {
+                    if ((dens >= 0 && dens < 8)) {
 
                         // Some block was set...
                         if (firstBlockHeight == -1)
                             firstBlockHeight = y;
 
-                        if (calcCaveDensity(c.getBlockWorldPosX(x), y, c.getBlockWorldPosZ(z)) > -0.6)
+                        if (calcCaveDensity(c.getBlockWorldPosX(x), y, c.getBlockWorldPosZ(z)) > -0.8)
                             GenerateOuterLayer(x, y, z, firstBlockHeight, c, type);
                         else
                             c.setBlock(x, y, z, (byte) 0);
 
                         continue;
-                    } else if (dens >= 16) {
+                    } else if (dens >= 8) {
 
                         // Some block was set...
                         if (firstBlockHeight == -1)
@@ -199,7 +199,6 @@ public class ChunkGeneratorTerrain extends ChunkGenerator {
                 }
 
                 break;
-
         }
     }
 
@@ -229,33 +228,44 @@ public class ChunkGeneratorTerrain extends ChunkGenerator {
 
         double mIntens = MathHelper.clamp(1.0 - (dT + dH) * 5.0) + 0.3;
 
-        double density = calcMountainDensity(x, y, z) * mIntens;
-        return -y + ((height * 64.0 + 16.0) + density * 128.0);
+        double density = calcMountainDensity(x, y, z) * mIntens * height;
+        return -y + (((height * 80.0) + 16.0) + density * 512.0);
     }
 
     public double calcBaseTerrain(double x, double z) {
-        return Math.sqrt(MathHelper.fastAbs(_pGen2.fBm(0.0009 * x, 0, 0.0009 * z, 8, 2.28371, 0.78)));
+        double result = (_pGen2.fBm(0.0001 * x, 0, 0.0001 * z, 4, 1.7, 0.9171) + 1.0) / 2.0;
+
+        double river = Math.sqrt(Math.abs(_pGen3.fBm(0.002 * x, 0, 0.002 * z, 8, 2.08371, 0.7471)));
+
+        river -= 0.1;
+
+        if (river < 0)
+            river = 0;
+
+        result *= river;
+
+        return result;
     }
 
     public double calcMountainDensity(double x, double y, double z) {
         double x1, y1, z1;
 
         x1 = x * 0.008;
-        y1 = y * 0.009;
+        y1 = y * 0.006;
         z1 = z * 0.008;
 
-        double result = _pGen5.fBm(x1 + _pGen1.noise(x1, y1, z1) * 0.4, y1 + _pGen1.noise(x1, y1, z1) * 0.4, z1 + _pGen1.noise(x1, y1, z1) * 0.4, 7, 2.03782819, 0.91181);
+        double result = _pGen5.fBm(x1, y1, z1, 9, 1.99782819, 0.8581);
 
         return result > 0 ? result : 0;
     }
 
     public double calcTemperatureAtGlobalPosition(double x, double z) {
-        double result = _pGen4.fBm(x * 0.002, 0, 0.002 * z, 4, 2.037291, 0.8138210);
+        double result = _pGen4.fBm(x * 0.001, 0, 0.001 * z, 4, 2.037291, 0.8138210);
         return MathHelper.clamp((result + 1.0) / 2.0);
     }
 
     public double calcHumidityAtGlobalPosition(double x, double z) {
-        double result = _pGen5.fBm(x * 0.002, 0, 0.002 * z, 4, 2.037291, 0.718398191);
+        double result = _pGen5.fBm(x * 0.003, 0, 0.003 * z, 4, 2.037291, 0.718398191);
         return MathHelper.clamp((result + 1.0) / 2.0);
     }
 

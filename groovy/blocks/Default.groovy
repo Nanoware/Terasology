@@ -18,7 +18,7 @@ bm.addBlock(new Block().withTitle("Bookshelf").withId((byte) 27).withTextureAtla
 // Liquids
 bm.addBlock(new Block().withTitle("Water").withId((byte) 9).withTextureAtlasPos(new Vector2f(15, 12)).withTranslucent(true).withPenetrable(true).withRenderBoundingBox(false).withHardness((byte) -1).withAllowBlockAttachment(false).withBypassSelectionRay(true).withCastsShadows(false).withLiquid(true).withBlockForm(BLOCK_FORM.LOWERED_BLOCK))
 
-bm.addBlock(new Block().withTitle("Lava").withId((byte) 10).withTextureAtlasPos(new Vector2f(15, 15)).withTranslucent(true).withPenetrable(true).withRenderBoundingBox(false).withHardness((byte) -1).withAllowBlockAttachment(false).withBypassSelectionRay(true).withCastsShadows(false).withLiquid(true).withBlockForm(BLOCK_FORM.LOWERED_BLOCK))
+bm.addBlock(new Block().withTitle("Lava").withId((byte) 10).withTextureAtlasPos(new Vector2f(15, 15)).withTranslucent(true).withPenetrable(true).withRenderBoundingBox(false).withHardness((byte) -1).withAllowBlockAttachment(false).withBypassSelectionRay(true).withCastsShadows(false).withLiquid(true).withBlockForm(BLOCK_FORM.LOWERED_BLOCK).withLuminance((byte) 8))
 // <--
 
 // Ice
@@ -89,7 +89,7 @@ bm.addBlock(new Block().withTitle("Torch").withId((byte) 29).withTextureAtlasPos
 
 // Leafs
 bm.addBlock(new Block().withTitle("Leaf").withId((byte) 11).withTextureAtlasPos(new Vector2f(4, 3)).withTranslucent(true).withAllowBlockAttachment(false).withColorSource(COLOR_SOURCE.FOLIAGE_LUT))
-bm.addBlock(new Block().withTitle("Red leaf").withId((byte) 30).withTextureAtlasPos(new Vector2f(4, 3)).withTranslucent(true).withAllowBlockAttachment(false).withColorSource(COLOR_SOURCE.FOLIAGE_LUT).withColorOffset(new Vector4f(1.0f, 0.8f, 0.8f, 1.0f)))
+bm.addBlock(new Block().withTitle("Red leaf").withId((byte) 31).withTextureAtlasPos(new Vector2f(4, 3)).withTranslucent(true).withAllowBlockAttachment(false).withColorSource(COLOR_SOURCE.FOLIAGE_LUT).withColorOffset(new Vector4f(1.0f, 0.8f, 0.8f, 1.0f)))
 bm.addBlock(new Block().withTitle("Dark leaf").withId((byte) 12).withTextureAtlasPos(new Vector2f(4, 3)).withTranslucent(true).withAllowBlockAttachment(false).withColorSource(COLOR_SOURCE.FOLIAGE_LUT).withColorOffset(new Vector4f(0.7f, 0.7f, 0.7f, 1.0f)))
 // <--
 

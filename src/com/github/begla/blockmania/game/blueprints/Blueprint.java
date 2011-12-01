@@ -18,8 +18,9 @@ package com.github.begla.blockmania.game.blueprints;
 import com.github.begla.blockmania.blocks.Block;
 import com.github.begla.blockmania.datastructures.BlockPosition;
 import com.github.begla.blockmania.world.main.WorldProvider;
-import javolution.util.FastMap;
-import javolution.util.FastSet;
+
+import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * A very simple prototype of the blueprint concept.
@@ -31,8 +32,8 @@ import javolution.util.FastSet;
  */
 public class Blueprint {
 
-    private FastSet<BlockPosition> _blockPositions = FastSet.newInstance();
-    private FastMap<BlockPosition, Block> _blockTypes = FastMap.newInstance();
+    private HashSet<BlockPosition> _blockPositions = new HashSet();
+    private HashMap<BlockPosition, Block> _blockTypes = new HashMap();
 
     /**
      * Builds the blueprint in the given world at the given position.
@@ -42,7 +43,7 @@ public class Blueprint {
      */
     public void build(WorldProvider provider, BlockPosition position) {
         for (BlockPosition bp : _blockPositions) {
-            provider.setBlock(bp.x + position.x, bp.y + position.y, bp.z + position.z, _blockTypes.get(bp).getId(), true, true);
+            provider.setBlock(bp.x + position.x, bp.y + position.y, bp.z + position.z, _blockTypes.get(bp).getId(), true, false, true);
         }
     }
 
@@ -51,7 +52,7 @@ public class Blueprint {
      *
      * @return The list
      */
-    public FastSet<BlockPosition> getBlockPositions() {
+    public HashSet<BlockPosition> getBlockPositions() {
         return _blockPositions;
     }
 
@@ -60,7 +61,7 @@ public class Blueprint {
      *
      * @return The map
      */
-    public FastMap<BlockPosition, Block> getBlockTypes() {
+    public HashMap<BlockPosition, Block> getBlockTypes() {
         return _blockTypes;
     }
 }

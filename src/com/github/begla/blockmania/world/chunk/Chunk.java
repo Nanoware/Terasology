@@ -27,7 +27,6 @@ import com.github.begla.blockmania.utilities.Helper;
 import com.github.begla.blockmania.utilities.MathHelper;
 import com.github.begla.blockmania.world.entity.StaticEntity;
 import com.github.begla.blockmania.world.main.LocalWorldProvider;
-import javolution.util.FastList;
 import org.lwjgl.opengl.GL11;
 
 import javax.vecmath.Vector3f;
@@ -35,6 +34,7 @@ import java.io.Externalizable;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
+import java.util.ArrayList;
 
 /**
  * Chunks are the basic components of the world. Each chunk contains a fixed amount of blocks
@@ -49,9 +49,10 @@ import java.io.ObjectOutput;
 public class Chunk extends StaticEntity implements Comparable<Chunk>, Externalizable {
 
     /* CONSTANT VALUES */
-    private static final int CHUNK_DIMENSION_X = (Integer) ConfigurationManager.getInstance().getConfig().get("Chunk.dimensionX");
-    private static final int CHUNK_DIMENSION_Y = (Integer) ConfigurationManager.getInstance().getConfig().get("Chunk.dimensionY");
-    private static final int CHUNK_DIMENSION_Z = (Integer) ConfigurationManager.getInstance().getConfig().get("Chunk.dimensionZ");
+    private static final int CHUNK_DIMENSION_X = 16;
+    private static final int CHUNK_DIMENSION_Y = 256;
+    private static final int CHUNK_DIMENSION_Z = 16;
+
     private static final Vector3f[] LIGHT_DIRECTIONS = {new Vector3f(1, 0, 0), new Vector3f(-1, 0, 0), new Vector3f(0, 1, 0), new Vector3f(0, -1, 0), new Vector3f(0, 0, 1), new Vector3f(0, 0, -1)};
 
     protected FastRandom _random;
@@ -61,7 +62,7 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
     protected LocalWorldProvider _parent;
     /* ------ */
     protected final BlockmaniaArray _blocks;
-    protected final BlockmaniaSmartArray _sunlight, _light;
+    protected final BlockmaniaSmartArray _sunlight, _light, _states;
     /* ------ */
     private ChunkMesh _activeMesh;
     private ChunkMesh _newMesh;
@@ -99,6 +100,7 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
         _blocks = new BlockmaniaArray(getChunkDimensionX(), getChunkDimensionY(), getChunkDimensionZ());
         _sunlight = new BlockmaniaSmartArray(getChunkDimensionX(), getChunkDimensionY(), getChunkDimensionZ());
         _light = new BlockmaniaSmartArray(getChunkDimensionX(), getChunkDimensionY(), getChunkDimensionZ());
+        _states = new BlockmaniaSmartArray(getChunkDimensionX(), getChunkDimensionY(), getChunkDimensionZ());
 
         _lightDirty = true;
         _dirty = true;
@@ -283,7 +285,7 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
      * @param type       The type of the light
      */
     public void unspreadLight(int x, int y, int z, byte lightValue, LIGHT_TYPE type) {
-        FastList<Vector3f> brightSpots = new FastList<Vector3f>();
+        ArrayList<Vector3f> brightSpots = new ArrayList<Vector3f>();
         unspreadLight(x, y, z, lightValue, 0, type, brightSpots);
 
         for (Vector3f pos : brightSpots) {
@@ -302,7 +304,7 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
      * @param type        The type of the light
      * @param brightSpots Log of light spots, which where brighter than the current light node
      */
-    public void unspreadLight(int x, int y, int z, byte lightValue, int depth, LIGHT_TYPE type, FastList<Vector3f> brightSpots) {
+    public void unspreadLight(int x, int y, int z, byte lightValue, int depth, LIGHT_TYPE type, ArrayList<Vector3f> brightSpots) {
         int blockPosX = getBlockWorldPosX(x);
         int blockPosZ = getBlockWorldPosZ(z);
 
@@ -444,6 +446,18 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
         return 0;
     }
 
+    /**
+     * Returns the state at a given local block position.
+     *
+     * @param x Local block position on the x-axis
+     * @param y Local block position on the y-axis
+     * @param z Local block position on the z-axis
+     * @return The block type
+     */
+    public byte getState(int x, int y, int z) {
+        return _states.get(x, y, z);
+    }
+
     public boolean canBlockSeeTheSky(int x, int y, int z) {
         for (int y1 = y; y1 < getChunkDimensionY(); y1++) {
             if (!BlockManager.getInstance().getBlock(getBlock(x, y1, z)).isTranslucent())
@@ -471,6 +485,18 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
             // Mark the neighbors as dirty
             markNeighborsDirty(x, z);
         }
+    }
+
+    /**
+     * Sets the state value at the given position.
+     *
+     * @param x    Local block position on the x-axis
+     * @param y    Local block position on the y-axis
+     * @param z    Local block position on the z-axis
+     * @param type The block type
+     */
+    public void setState(int x, int y, int z, byte type) {
+        _states.set(x, y, z, type);
     }
 
     /**
@@ -572,7 +598,7 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
 
     public AABB getAABB() {
         Vector3f dimensions = new Vector3f(getChunkDimensionX() / 2, getChunkDimensionY() / 2, getChunkDimensionZ() / 2);
-        Vector3f position = new Vector3f(getChunkWorldPosX() + dimensions.x - _parent.getRenderingReferencePoint().x, dimensions.y - _parent.getRenderingReferencePoint().y, getChunkWorldPosZ() + dimensions.z - _parent.getRenderingReferencePoint().z);
+        Vector3f position = new Vector3f(getChunkWorldPosX() + dimensions.x, dimensions.y, getChunkWorldPosZ() + dimensions.z);
         return new AABB(position, dimensions);
     }
 
@@ -623,6 +649,9 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
 
         for (int i = 0; i < _light.sizePacked(); i++)
             out.writeByte(_light.getRawByte(i));
+
+        for (int i = 0; i < _states.sizePacked(); i++)
+            out.writeByte(_states.getRawByte(i));
     }
 
     public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
@@ -642,6 +671,9 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
 
         for (int i = 0; i < _light.sizePacked(); i++)
             _light.setRawByte(i, in.readByte());
+
+        for (int i = 0; i < _states.sizePacked(); i++)
+            _states.setRawByte(i, in.readByte());
 
         _fresh = false;
         _dirty = true;
@@ -675,15 +707,20 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
         GL11.glPopMatrix();
     }
 
-    public void update() {
+    public boolean generateVBOs() {
         if (_newMesh != null) {
-            _newMesh.generateVBOs();
+            return _newMesh.generateVBOs();
         }
 
-        swapActiveMesh();
+        return false;
     }
 
     public void render() {
+
+    }
+
+    public void update() {
+        swapActiveMesh();
     }
 
     private void setNewMesh(ChunkMesh newMesh) {
@@ -700,17 +737,14 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
         }
     }
 
-    private void swapActiveMesh() {
-        if (isDirty() || isFresh() || isLightDirty())
-            return;
-
+    private boolean swapActiveMesh() {
         synchronized (this) {
             if (_disposed)
-                return;
+                return false;
 
             if (_newMesh != null) {
                 if (_newMesh.isDisposed() || !_newMesh.isGenerated())
-                    return;
+                    return false;
 
                 ChunkMesh newMesh = _newMesh;
                 _newMesh = null;
@@ -720,8 +754,12 @@ public class Chunk extends StaticEntity implements Comparable<Chunk>, Externaliz
 
                 if (oldActiveMesh != null)
                     oldActiveMesh.dispose();
+
+                return true;
             }
         }
+
+        return false;
     }
 
     /**

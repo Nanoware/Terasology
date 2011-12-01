@@ -17,7 +17,9 @@
 package com.github.begla.blockmania.game.mobs;
 
 import com.github.begla.blockmania.world.entity.MovableEntity;
-import javolution.util.FastSet;
+import com.github.begla.blockmania.world.main.World;
+
+import java.util.HashSet;
 
 /**
  * MobManager handles non-player entities that do stuff in the world
@@ -29,29 +31,31 @@ public class MobManager {
     /**
      * Set that contains mobs
      */
-    private FastSet<MovableEntity> _mobStore = new FastSet<MovableEntity>();
+    private HashSet<MovableEntity> _mobStore = new HashSet<MovableEntity>();
+    private World _parent;
 
     /**
      * Default constructor - doesn't do anything yet
      */
-    public MobManager() {
-
+    public MobManager(World parent) {
+        _parent = parent;
     }
 
-     /**
+    /**
      * Acts on a tick to consider AI actions that involve multiple mobs at once (individual AI is the mob's responsibility)
      */
     public void tickAI() {
         // Nothing yet - first example might be identifying when 2+ mobs are close enough to encourage them to do something
         // Actions to maybe take: group up (slimes could even merge), start an NPC construction, etc
     }
-    
+
     /**
      * Loops through all mobs in the Set and calls their update() method
      */
     public void updateAll() {
         for (MovableEntity mob : _mobStore) {
-            mob.update();
+            if (_parent.isInRange(mob.getPosition()))
+                mob.update();
         }
     }
 
@@ -60,7 +64,8 @@ public class MobManager {
      */
     public void renderAll() {
         for (MovableEntity mob : _mobStore) {
-            mob.render();
+            if (_parent.isEntityVisible(mob) && _parent.isInRange(mob.getPosition()))
+                mob.render();
         }
     }
 
@@ -71,5 +76,14 @@ public class MobManager {
      */
     public void addMob(MovableEntity mob) {
         _mobStore.add(mob);
+    }
+
+    /**
+     * Returns the amount of spawned mobs.
+     *
+     * @return The amount of mobs active
+     */
+    public int getActiveMobAmount() {
+        return _mobStore.size();
     }
 }

@@ -1,8 +1,7 @@
-uniform sampler2D textureAtlas;
+uniform sampler2D texture;
+uniform vec4 colorOffset;
 
 uniform float light = 1.0;
-uniform float texOffsetX = 0.0;
-uniform float texOffsetY = 0.0;
 
 vec4 srgbToLinear(vec4 color){
     return pow(color, vec4(1.0 / GAMMA));
@@ -13,7 +12,11 @@ vec4 linearToSrgb(vec4 color){
 }
 
 void main(){
-    vec4 color = srgbToLinear(texture2D(textureAtlas, vec2(gl_TexCoord[0].x + texOffsetX , gl_TexCoord[0].y + texOffsetY )));
+    vec4 color = srgbToLinear(texture2D(texture, vec2(gl_TexCoord[0].x , gl_TexCoord[0].y)));
+
+    color.rgb *= clamp(gl_Color.rgb*1.5, 0.0, 1.0) * colorOffset.rgb;
     color.rgb *= pow(0.86, (1.0-light)*15.0);
+    color.a = gl_Color.a;
+
     gl_FragColor = linearToSrgb(color);
 }

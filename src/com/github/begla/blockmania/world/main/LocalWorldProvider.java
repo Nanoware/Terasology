@@ -17,25 +17,28 @@ package com.github.begla.blockmania.world.main;
 
 import com.github.begla.blockmania.blocks.BlockManager;
 import com.github.begla.blockmania.configuration.ConfigurationManager;
+import com.github.begla.blockmania.datastructures.BlockPosition;
+import com.github.begla.blockmania.game.Blockmania;
 import com.github.begla.blockmania.generators.ChunkGeneratorTerrain;
 import com.github.begla.blockmania.generators.GeneratorManager;
-import com.github.begla.blockmania.game.Blockmania;
 import com.github.begla.blockmania.utilities.FastRandom;
 import com.github.begla.blockmania.utilities.MathHelper;
 import com.github.begla.blockmania.world.chunk.Chunk;
-import com.github.begla.blockmania.world.interfaces.ChunkProvider;
 import com.github.begla.blockmania.world.chunk.LocalChunkCache;
-import javolution.util.FastList;
+import com.github.begla.blockmania.world.interfaces.ChunkProvider;
+import com.github.begla.blockmania.world.simulators.LiquidSimulator;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.input.SAXBuilder;
 import org.jdom.output.XMLOutputter;
 import org.xml.sax.InputSource;
 
+import javax.vecmath.Vector2f;
 import javax.vecmath.Vector3f;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
 import java.util.logging.Level;
 
 /**
@@ -53,11 +56,15 @@ public class LocalWorldProvider implements WorldProvider {
 
     /* CONST */
     protected final long DAY_NIGHT_LENGTH_IN_MS = (Long) ConfigurationManager.getInstance().getConfig().get("World.dayNightLengthInMs");
+    protected final Vector2f SPAWN_ORIGIN = (Vector2f) ConfigurationManager.getInstance().getConfig().get("World.spawnOrigin");
 
     /* PROPERTIES */
     protected String _title, _seed;
     protected long _creationTime = Blockmania.getInstance().getTime() - (Long) ConfigurationManager.getInstance().getConfig().get("World.initialTimeOffsetInMs");
     public Vector3f _renderingReferencePoint = new Vector3f();
+
+    /* SIMULATORS */
+    private LiquidSimulator _liquidSimulator;
 
     /* RANDOMNESS */
     protected final FastRandom _random;
@@ -93,21 +100,21 @@ public class LocalWorldProvider implements WorldProvider {
 
         _generatorManager = new GeneratorManager(this);
         _chunkProvider = new LocalChunkCache(this);
+        _liquidSimulator = new LiquidSimulator(this);
     }
 
     /**
      * Places a block of a specific type at a given position and optionally refreshes the
      * corresponding light values.
      *
-     * @param x           The X-coordinate
-     * @param y           The Y-coordinate
-     * @param z           The Z-coordinate
-     * @param type        The type of the block to set
-     * @param updateLight If set the affected chunk is queued for updating
-     * @param overwrite   If true currently present blocks get replaced
+     * @param x         The X-coordinate
+     * @param y         The Y-coordinate
+     * @param z         The Z-coordinate
+     * @param type      The type of the block to set
+     * @param overwrite If true currently present blocks get replaced
      * @return True if a block was set/replaced
      */
-    public final boolean setBlock(int x, int y, int z, byte type, boolean updateLight, boolean overwrite) {
+    public final boolean setBlock(int x, int y, int z, byte type, boolean updateLight, boolean simulate, boolean overwrite) {
         int chunkPosX = MathHelper.calcChunkPosX(x);
         int chunkPosZ = MathHelper.calcChunkPosZ(z);
 
@@ -129,6 +136,14 @@ public class LocalWorldProvider implements WorldProvider {
                 newBlock = type;
             } else {
                 return false;
+            }
+
+            /* LIQUID SIMULATION */
+            if (BlockManager.getInstance().getBlock(newBlock).isLiquid()) {
+                c.setState(blockPosX, y, blockPosZ, (byte) 7);
+
+                if (simulate)
+                    _liquidSimulator.addBlockPosition(new BlockPosition(c.getBlockWorldPosX(blockPosX), y, c.getBlockWorldPosZ(blockPosZ)));
             }
 
             if (updateLight) {
@@ -171,6 +186,17 @@ public class LocalWorldProvider implements WorldProvider {
         return true;
     }
 
+    public void setState(int x, int y, int z, byte state) {
+        int chunkPosX = MathHelper.calcChunkPosX(x);
+        int chunkPosZ = MathHelper.calcChunkPosZ(z);
+
+        int blockPosX = MathHelper.calcBlockPosX(x, chunkPosX);
+        int blockPosZ = MathHelper.calcBlockPosZ(z, chunkPosZ);
+
+        Chunk c = getChunkProvider().loadOrCreateChunk(MathHelper.calcChunkPosX(x), MathHelper.calcChunkPosZ(z));
+        c.setState(blockPosX, y, blockPosZ, state);
+    }
+
     /**
      * Returns the block value at the given position.
      *
@@ -180,7 +206,6 @@ public class LocalWorldProvider implements WorldProvider {
     public final byte getBlockAtPosition(Vector3f pos) {
         return getBlock((int) (pos.x + ((pos.x >= 0) ? 0.5f : -0.5f)), (int) (pos.y + ((pos.y >= 0) ? 0.5f : -0.5f)), (int) (pos.z + ((pos.z >= 0) ? 0.5f : -0.5f)));
     }
-
 
     /**
      * Returns the light value at the given position.
@@ -210,6 +235,17 @@ public class LocalWorldProvider implements WorldProvider {
 
         Chunk c = getChunkProvider().loadOrCreateChunk(MathHelper.calcChunkPosX(x), MathHelper.calcChunkPosZ(z));
         return c.getBlock(blockPosX, y, blockPosZ);
+    }
+
+    public byte getState(int x, int y, int z) {
+        int chunkPosX = MathHelper.calcChunkPosX(x);
+        int chunkPosZ = MathHelper.calcChunkPosZ(z);
+
+        int blockPosX = MathHelper.calcBlockPosX(x, chunkPosX);
+        int blockPosZ = MathHelper.calcBlockPosZ(z, chunkPosZ);
+
+        Chunk c = getChunkProvider().loadOrCreateChunk(MathHelper.calcChunkPosX(x), MathHelper.calcChunkPosZ(z));
+        return c.getState(blockPosX, y, blockPosZ);
     }
 
     /**
@@ -260,23 +296,18 @@ public class LocalWorldProvider implements WorldProvider {
     public Vector3f nextSpawningPoint() {
         ChunkGeneratorTerrain tGen = ((ChunkGeneratorTerrain) getGeneratorManager().getChunkGenerators().get(0));
 
+        FastRandom nRandom = new FastRandom(Blockmania.getInstance().getTime());
+
         for (; ; ) {
-            int randX = (int) (_random.randomDouble() * 32000f);
-            int randZ = (int) (_random.randomDouble() * 32000f);
+            int randX = (int) (nRandom.randomDouble() * 128f);
+            int randZ = (int) (nRandom.randomDouble() * 128f);
 
-            ChunkGeneratorTerrain.BIOME_TYPE type = tGen.calcBiomeTypeForGlobalPosition(randX, randZ);
+            for (int y = Chunk.getChunkDimensionY() - 1; y >= 32; y--) {
 
-            if (type == ChunkGeneratorTerrain.BIOME_TYPE.FOREST) {
+                double dens = tGen.calcDensity(randX + SPAWN_ORIGIN.x, y, randZ + SPAWN_ORIGIN.y);
 
-                for (int y = Chunk.getChunkDimensionY() - 1; y >= 0; y--) {
-
-                    double dens = tGen.calcDensity(randX, y, randZ);
-
-                    if (dens >= 0 && dens < 64)
-                        return new Vector3f(randX, y, randZ);
-                }
-
-
+                if (dens >= 0)
+                    return new Vector3f(randX + SPAWN_ORIGIN.x, y, randZ + SPAWN_ORIGIN.y);
             }
         }
     }
@@ -286,6 +317,10 @@ public class LocalWorldProvider implements WorldProvider {
 
         saveMetaData();
         getChunkProvider().dispose();
+    }
+
+    public void simulate() {
+        _liquidSimulator.simulate();
     }
 
     /**
@@ -320,6 +355,7 @@ public class LocalWorldProvider implements WorldProvider {
     public String getWorldSavePath() {
         return String.format("SAVED_WORLDS/%s", _title);
     }
+
     public void setTime(double time) {
         _creationTime = Blockmania.getInstance().getTime() - (long) (time * DAY_NIGHT_LENGTH_IN_MS);
     }
@@ -431,7 +467,7 @@ public class LocalWorldProvider implements WorldProvider {
      * @param type        The type of light
      * @param brightSpots List of bright spots found while unspreading the light
      */
-    public void unspreadLight(int x, int y, int z, byte lightValue, int depth, Chunk.LIGHT_TYPE type, FastList<Vector3f> brightSpots) {
+    public void unspreadLight(int x, int y, int z, byte lightValue, int depth, Chunk.LIGHT_TYPE type, ArrayList<Vector3f> brightSpots) {
         int chunkPosX = MathHelper.calcChunkPosX(x);
         int chunkPosZ = MathHelper.calcChunkPosZ(z);
 
@@ -462,4 +498,6 @@ public class LocalWorldProvider implements WorldProvider {
         Chunk c = getChunkProvider().loadOrCreateChunk(MathHelper.calcChunkPosX(x), MathHelper.calcChunkPosZ(z));
         c.spreadLight(blockPosX, y, blockPosZ, lightValue, depth, type);
     }
+
+
 }

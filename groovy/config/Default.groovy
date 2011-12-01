@@ -1,21 +1,30 @@
 import org.lwjgl.opengl.DisplayMode
 import org.lwjgl.opengl.PixelFormat
+import javax.vecmath.Vector2f
 
 System {
 
     gameTitle = "Blockmania Pre Alpha"
 
+    // Maximum amount of chunk updates per iteration
+    maxChunkUpdatesPerIteration = 1
+
+    // Max amount of particles
+    maxParticles = 128
+
+    // Size of the dynamic cloud texture
+    cloudResolution = new Vector2f(64, 64)
+
     // Cloud update interval in ms
-    cloudUpdateInterval = 10
-    // Defines how often the list of chunks around the player gets updated per second
-    chunkRequestsPerSecond = 8
-    // Defines how many chunk update can be processed/queued each second
-    chunkUpdatesPerSecond = 32
+    cloudUpdateInterval = (Integer) 1000
+
     // Defines the maximum amount of threads used for chunk generation
-    maxThreads = Runtime.getRuntime().availableProcessors() + 1
+    maxThreads = Runtime.getRuntime().availableProcessors() <= 2 ? 1 : 2;
+
     // Enable/or disable the persisting of chunks
     saveChunks = true
 
+    // Size of the chunk cache
     chunkCacheSize = 1024
 
     Debug {
@@ -33,17 +42,22 @@ System {
 
 Graphics {
 
+    gamma = 2.2d
+    animatedWaterAndGrass = true
+
     pixelFormat = new PixelFormat().withDepthBits(24)
     displayMode = new DisplayMode(1280, 720)
 
     aspectRatio = 16.0d / 9.0d
 
-    fullscreen = false;
+    fullscreen = false
 
     fov = 64.0d
 
-    viewingDistanceX = 25
-    viewingDistanceZ = 25
+    viewingDistanceNear = 8
+    viewingDistanceModerate = 16
+    viewingDistanceFar = 24
+    viewingDistanceUltra = 28
 
 }
 
@@ -68,14 +82,6 @@ Controls {
 
 }
 
-Chunk {
-
-    dimensionX = 16
-    dimensionY = 256
-    dimensionZ = 16
-
-}
-
 Player {
 
     bobbing = true
@@ -95,6 +101,8 @@ Player {
 }
 
 World {
+
+    spawnOrigin = new Vector2f(-24429, 20547)
 
     defaultSeed = "nXhTnOmGgLsZmWhO"
 
