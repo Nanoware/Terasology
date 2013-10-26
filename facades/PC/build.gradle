@@ -198,7 +198,7 @@ task distForLauncher (type: Sync) {
     into rootDirDist
     from distAppZip
 
-    into ("../build/resources/main/org/terasology/version") {
+    into ("../resources/main/org/terasology/version") {
         from ("$rootDir/engine/build/classes/org/terasology/version") {
             include ('versionInfo.properties')
         }
