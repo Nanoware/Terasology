@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ *  http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -30,7 +30,7 @@ import org.terasology.logic.tree.lsystem.AxionElementReplacement;
 import org.terasology.logic.tree.lsystem.DefaultAxionElementGeneration;
 import org.terasology.logic.tree.lsystem.SimpleAxionElementReplacement;
 import org.terasology.logic.tree.lsystem.SurroundAxionElementGeneration;
-import org.terasology.utilities.procedural.FastRandom;
+import org.terasology.utilities.random.FastRandom;
 import org.terasology.world.BlockEntityRegistry;
 import org.terasology.world.WorldProvider;
 import org.terasology.world.block.Block;
@@ -104,7 +104,7 @@ public class TreeGrowingSystem implements UpdateSubscriberSystem {
                     @Override
                     public String generateReplacement() {
                         // 137.5 degrees is a golden ratio
-                        int deg = 138 + rnd.randomInt(17) - 8;
+                        int deg = rnd.nextInt(130, 147);
                         return "W+(" + deg + ")[&Mb]Wt";
                     }
                 });

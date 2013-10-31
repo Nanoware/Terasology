@@ -35,7 +35,7 @@ import org.terasology.physics.Physics;
 import org.terasology.physics.engine.PhysicsEngine;
 import org.terasology.rendering.cameras.Camera;
 import org.terasology.rendering.world.WorldRenderer;
-import org.terasology.utilities.procedural.FastRandom;
+import org.terasology.utilities.random.FastRandom;
 import org.terasology.world.BlockEntityRegistry;
 import org.terasology.world.WorldProvider;
 import org.terasology.world.chunks.localChunkProvider.LocalChunkProvider;
@@ -74,7 +74,7 @@ public class InitialiseWorld extends SingleStepLoadProcess {
         WorldInfo worldInfo = gameManifest.getWorldInfo(TerasologyConstants.MAIN_WORLD);
         if (worldInfo.getSeed() == null || worldInfo.getSeed().isEmpty()) {
             FastRandom random = new FastRandom();
-            worldInfo.setSeed(random.randomCharacterString(16));
+            worldInfo.setSeed(random.nextString(16));
         }
 
         logger.info("World seed: \"{}\"", worldInfo.getSeed());

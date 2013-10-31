@@ -20,13 +20,18 @@ import org.terasology.math.Vector2i;
 /**
  * @author Immortius
  */
-public abstract class BaseInteractionListener implements InteractionListener {
+public class BaseInteractionListener implements InteractionListener {
 
     private boolean mouseOver;
 
     @Override
-    public void setMouseOver(Vector2i pos, boolean value) {
-        this.mouseOver = value;
+    public void onMouseOver(Vector2i pos, boolean topMostElement) {
+        this.mouseOver = topMostElement;
+    }
+
+    @Override
+    public void onMouseLeave() {
+        this.mouseOver = false;
     }
 
     @Override
@@ -35,7 +40,15 @@ public abstract class BaseInteractionListener implements InteractionListener {
     }
 
     @Override
-    public boolean onMouseRelease(int button, Vector2i pos) {
+    public void onMouseDrag(int button, Vector2i pos) {
+    }
+
+    @Override
+    public void onMouseRelease(int button, Vector2i pos) {
+    }
+
+    @Override
+    public boolean onMouseWheeled(int amount, Vector2i pos) {
         return false;
     }
 

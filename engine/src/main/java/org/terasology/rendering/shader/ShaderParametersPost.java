@@ -28,7 +28,8 @@ import org.terasology.rendering.assets.texture.Texture;
 import org.terasology.rendering.cameras.Camera;
 import org.terasology.rendering.opengl.DefaultRenderingProcess;
 import org.terasology.rendering.world.WorldRenderer;
-import org.terasology.utilities.procedural.FastRandom;
+import org.terasology.utilities.random.FastRandom;
+import org.terasology.utilities.random.Random;
 
 import static org.lwjgl.opengl.GL11.glBindTexture;
 
@@ -39,15 +40,15 @@ import static org.lwjgl.opengl.GL11.glBindTexture;
  */
 public class ShaderParametersPost extends ShaderParametersBase {
 
-    FastRandom rand = new FastRandom();
+    private Random rand = new FastRandom();
 
     @EditorRange(min = 0.0f, max = 1.0f)
-    float filmGrainIntensity = 0.025f;
+    private float filmGrainIntensity = 0.025f;
 
     @EditorRange(min = 0.0f, max = 1.0f)
-    float blurStart;
+    private float blurStart;
     @EditorRange(min = 0.0f, max = 1.0f)
-    float blurLength = 0.15f;
+    private float blurLength = 0.15f;
 
     @Override
     public void applyParameters(Material program) {
@@ -95,7 +96,7 @@ public class ShaderParametersPost extends ShaderParametersBase {
                 glBindTexture(GL11.GL_TEXTURE_2D, filmGrainNoiseTexture.getId());
                 program.setInt("texNoise", texId++, true);
                 program.setFloat("grainIntensity", filmGrainIntensity, true);
-                program.setFloat("noiseOffset", rand.randomPosFloat(), true);
+                program.setFloat("noiseOffset", rand.nextFloat(), true);
 
                 program.setFloat2("noiseSize", filmGrainNoiseTexture.getWidth(), filmGrainNoiseTexture.getHeight(), true);
                 program.setFloat2("renderTargetSize", sceneCombined.width, sceneCombined.height, true);
