@@ -66,10 +66,8 @@ public final class Terasology {
 		String nl = System.getProperty("line.separator"); 
 		StringBuilder sb = new StringBuilder();
 		
-		while (t != null && t != t.getCause())
-		{
-			if (t.getMessage() != null)
-			{
+		while (t != null && t != t.getCause()) {
+			if (t.getMessage() != null) {
 				sb.append(t.getLocalizedMessage());
 				sb.append(nl);
 			}
