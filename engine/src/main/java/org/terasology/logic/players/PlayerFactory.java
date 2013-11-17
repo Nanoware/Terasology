@@ -77,8 +77,10 @@ public class PlayerFactory {
 
         EntityRef doorItem = entityManager.create("core:door");
         ItemComponent doorItemComp = doorItem.getComponent(ItemComponent.class);
-        doorItemComp.stackCount = 20;
-        doorItem.saveComponent(doorItemComp);
+        if (doorItemComp != null) {
+        	doorItemComp.stackCount = 20;
+        	doorItem.saveComponent(doorItemComp);
+        }
         inventoryManager.giveItem(chest, doorItem);
 
         // Inner goodie chest
