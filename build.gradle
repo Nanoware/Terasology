@@ -1,6 +1,3 @@
-// Separate build file for structure heavy stuff like using Git to fetch other repos to embed within the project
-apply from: 'config/gradle/utility.gradle'
-
 // Needed for extending the "clean" task to also delete custom stuff defined here like natives
 apply plugin: 'base'
 
@@ -33,8 +30,8 @@ assert org.gradle.api.JavaVersion.current().isJava8Compatible()
 // Declare "extra properties" (variables) for the project (and subs) - a Gradle thing that makes them special.
 ext {
     dirNatives = 'natives'
-    dirConfigMetrics = 'config/metrics'
-    templatesDir = 'templates'
+    dirConfigMetrics = 'gradle/metrics'
+    templatesDir = 'gradle/templates'
 
     // Lib dir for use in manifest entries etc (like in :engine). A separate "libsDir" exists, auto-created by Gradle
     subDirLibs = 'libs'
@@ -161,7 +158,7 @@ task protobufCompileLinux(type:Exec) {
 
 // TODO: Convert the natives, config, and IDE setup to be tasks like this one
 task copyInMissingTemplates {
-    description = "Copies in placeholders from the /templates dir to project root if not present yet"
+    description = "Copies in placeholders from the /gradle/templates dir to project root if not present yet"
     File gradlePropsFile = new File(rootDir, 'gradle.properties')
     File OverrideCfgFile = new File(rootDir, 'override.cfg')
     if (!gradlePropsFile.exists()) {
@@ -172,10 +169,38 @@ task copyInMissingTemplates {
     }
 }
 
+// TODO: Consider making this stuff excluded from clean, then offer a fullClean for the rare time that may be needed
+// That would allow a `gradlew clean` without having to rerun this at all, everything would still work fine (with rebuild)
 task prepareStuff {
     dependsOn extractNatives
     dependsOn extractConfig
     dependsOn copyInMissingTemplates
+}
+
+task harnessTheBuild (type: Zip) {
+    description = "Prepares all build files and supporting stuff needed to build modules solo"
+    dependsOn extractNatives
+    dependsOn extractConfig
+
+    from ('modules') {
+        include 'build.gradle'
+    }
+
+    from ('gradle') {
+        include '*.gradle'
+        include 'wrapper/**/*'
+        include 'metrics/**/*'
+        include 'templates/**/*'
+        into 'gradle'
+    }
+
+    from 'gradlew'
+    from 'gradlew.bat'
+    from 'groovyw'
+    from 'groovyw.bat'
+    from 'module.groovy'
+
+    archiveName = "TerasologyHarness.zip"
 }
 
 afterEvaluate {

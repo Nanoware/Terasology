@@ -25,7 +25,7 @@ extensions
 /libs/*
 !/libs/subprojects.gradle
 
-# Ignore Gradle and some transient project config files (template versions available under /templates)
+# Ignore Gradle and some transient project config files (template versions available under /gradle/templates)
 build/
 /gradle.properties
 /override.cfg
@@ -90,7 +90,7 @@ entityDump.txt
 
 # Ignore stuff we extract for use with Terasology
 /natives/
-config/metrics/
+gradle/metrics/
 
 
 # Ignore weird stuff that might be obsolete

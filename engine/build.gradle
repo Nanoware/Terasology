@@ -6,7 +6,7 @@ plugins {
 }
 
 // Grab all the common stuff like plugins to use, artifact repositories, code analysis config, etc
-apply from: "$rootDir/config/gradle/artifactory.gradle"
+apply from: "$rootDir/gradle/artifactory.gradle"
 
 import groovy.json.JsonSlurper
 import org.reflections.Reflections;
@@ -23,7 +23,8 @@ ext {
     // Read environment variables, including variables passed by jenkins continuous integration server
     env = System.getenv()
 
-    templatesDir = new File(rootDir, 'templates')
+    // TODO: Use project.file() instead? Good practice / warning. Can be used as plain file(). But may need one-arg approach?
+    templatesDir = new File(rootDir, 'gradle/templates')
 
     // Stuff for our automatic version file setup
     startDateTimeString = dateTimeFormat.format(new Date())
@@ -157,7 +158,7 @@ task cacheReflections {
     description = 'Caches reflection output to make regular startup faster. May go stale and need cleanup at times.'
     inputs.files project.classes.outputs.files
     dependsOn classes
-    
+
     doLast {
         // Without the .mkdirs() we might hit a scenario where the classes dir doesn't exist yet
         // TODO: This could be Gradlefied further by declaring inputs/outputs better, maybe a plugin?
@@ -167,7 +168,7 @@ task cacheReflections {
             .setScanners(new TypeAnnotationsScanner(), new SubTypesScanner()))
         reflections.save(sourceSets.main.output.classesDir.toString() + "/reflections.cache")
     }
-    
+
 }
 
 task cleanReflections(type: Delete) {

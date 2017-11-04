@@ -65,7 +65,15 @@ public final class PathManager {
             URL urlToSource = PathManager.class.getProtectionDomain().getCodeSource().getLocation();
 
             Path codeLocation = Paths.get(urlToSource.toURI());
-            System.out.println("codeLocation: " + codeLocation);
+            System.out.println("PathManager being initialized. Initial code location is " + codeLocation.toAbsolutePath());
+
+            // In the case of unit testing in a module the engine jar may be somewhere totally different. We don't want that
+            if (codeLocation.toString().contains(".gradle") || codeLocation.toString().contains(".m2")) {
+                System.out.println("PathManager is being initialized out of a jar in the .gradle or .m2 cache. Need better working dir!");
+                codeLocation = Paths.get("");
+                System.out.println("Hopefully changed it to the right working dir: " + codeLocation.toAbsolutePath());
+            }
+
             if (Files.isRegularFile(codeLocation)) {
                 installPath = findNativesHome(codeLocation.getParent(), 5);
                 if (installPath == null) {

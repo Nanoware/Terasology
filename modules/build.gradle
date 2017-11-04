@@ -8,6 +8,9 @@ buildscript {
         jcenter()
     }
     dependencies {
+        // Artifactory plugin
+        classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '4.0.0')
+
         // Needed at this level to support modules in Kotlin
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.0.6"
     }
@@ -15,10 +18,36 @@ buildscript {
 
 import groovy.json.JsonSlurper
 
-println "The build.gradle from /modules says hi"
+println "The build.gradle from /modules says hi. We're going to review some potential modules!"
 
-// We need to prepare the build logic for each module so we use a subprojects block to make this execute for each
-subprojects {
+if (project.name != project(':').name) {
+    println "We're running embedded in an engine workspace"
+
+    // We need to prepare the build logic for each module so we use a subprojects block to make this execute for each
+    subprojects {
+
+        // Parse out the language selection from module.txt
+        def moduleFile = file('module.txt')
+        JsonSlurper slurper = new JsonSlurper()
+        def moduleConfig = slurper.parseText(moduleFile.text)
+
+        // When we know the language we apply the appropriate language-specific wrapper for build logic
+        if (moduleConfig.language == "scala") {
+            println "\nFound a Scala module: * $project.name *"
+            apply from: "$rootDir/gradle/scala.gradle"
+        } else if (moduleConfig.language == "kotlin") {
+            println "\nFound a Kotlin module: * $project.name *"
+            // TODO: This satisfies Kotlin compilation in a module using it. Still need to guarantee a dependency on KotlinLib to get the runtime jar (I think?)
+            // So during Gradling for a language specific module insert condition: If KotlinLib then include the jar. If not then validate KotlinLib dep in module.txt
+            apply from: "$rootDir/gradle/kotlin.gradle"
+        } else {
+            println "\nFound a Java module: * $project.name *"
+            apply from: "$rootDir/gradle/java.gradle"
+        }
+    }
+
+} else {
+    println "Solo module build woo!"
 
     // Parse out the language selection from module.txt
     def moduleFile = file('module.txt')
@@ -27,15 +56,15 @@ subprojects {
 
     // When we know the language we apply the appropriate language-specific wrapper for build logic
     if (moduleConfig.language == "scala") {
-        println "Oh hey, a Scala module. Using its build"
-        apply from: '../scala.gradle'
+        println "\nThis is a standalone Scala module workspace: * $project.name *"
+        apply from: "$rootDir/gradle/scala.gradle"
     } else if (moduleConfig.language == "kotlin") {
-        println "Oh hey, a Kotlin module. Using its build"
+        println "\nThis is a standalone Kotlin module workspace: * $project.name *"
         // TODO: This satisfies Kotlin compilation in a module using it. Still need to guarantee a dependency on KotlinLib to get the runtime jar (I think?)
         // So during Gradling for a language specific module insert condition: If KotlinLib then include the jar. If not then validate KotlinLib dep in module.txt
-        apply from: '../kotlin.gradle'
+        apply from: "$rootDir/gradle/kotlin.gradle"
     } else {
-        println "Boring old Java module"
-        apply from: '../java.gradle'
+        println "\nThis is a standalone Java module workspace: * $project.name *"
+        apply from: "$rootDir/gradle/java.gradle"
     }
 }

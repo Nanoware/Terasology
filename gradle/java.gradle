@@ -1,10 +1,10 @@
 // This Gradle file is an include file for modules wanting to run in plain old Java
 
 // Grab all the common stuff like plugins to use, artifact repositories, code analysis config, Artifactory settings, Git magic
-apply from: "$rootDir/config/gradle/artifactory.gradle"
+apply from: "$rootDir/gradle/artifactory.gradle"
 
 // Grab the common stuff specific to modules builds (allows it to live in a module specific but language agnostic file)
-apply from: "../module.gradle"
+apply from: "$rootDir/gradle/module.gradle"
 
 // Dependencies needed for what our Gradle scripts themselves use. It cannot be included via an external Gradle file :-(
 buildscript {

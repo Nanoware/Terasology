@@ -1,11 +1,28 @@
 // This include file applies our Artifactory related settings to places that need them (root project + modules)
 // It is a superset of the the stuff common to Java sub projects so we include the common.gradle here
-apply from: "$rootDir/config/gradle/common.gradle"
+apply from: "$rootDir/gradle/common.gradle"
 
 // Artifactory publishing requires these (without maven we'd get no .pom with dependency info published)
 apply plugin: 'maven'
 apply plugin: 'com.jfrog.artifactory'
 apply plugin: 'maven-publish'
+
+// Dependencies needed for what our Gradle scripts themselves use. It cannot be included via an external Gradle file :-(
+buildscript {
+    repositories {
+        // External libs - jcenter is Bintray and is supposed to be a superset of Maven Central, but do both just in case
+        jcenter()
+    }
+
+    dependencies {
+        // Artifactory plugin
+        classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '4.0.0')
+
+        // Needed for caching reflected data during builds
+        classpath 'org.reflections:reflections:0.9.10'
+        classpath 'dom4j:dom4j:1.6.1'
+    }
+}
 
 // This configures what we need to interact with the MovingBlocks Artifactory instance. It is primarily for local use.
 // In Jenkins the Artifactory plugin can supply overrides for the following values

@@ -1,0 +1,15 @@
+# Modules do not need and are not allowed a build file
+build.gradle
+
+# IntelliJ
+*.iml
+
+# Eclipse
+.checkstyle
+.classpath
+.project
+.settings
+bin/
+build/
+
+#TODO: Add new entries expected when the build harness has been added to a module dir

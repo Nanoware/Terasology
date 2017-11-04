@@ -78,7 +78,7 @@ dependencies {
 
     // Check to see if this module is not the root Gradle project - if so we are in a multi-project workspace
     if (project.name != project(':').name) {
-        println "\nProcessing module '$project.name' in a multi-project workspace"
+        println "Processing module '$project.name' in a multi-project workspace"
 
         // Dependency on the engine itself (actually its built jar file)
         compile project(':engine')

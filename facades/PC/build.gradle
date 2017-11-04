@@ -1,7 +1,7 @@
 // The PC facade is responsible for the primary distribution - a plain Java application runnable on PCs
 
 // Grab all the common stuff like plugins to use, artifact repositories, code analysis config
-apply from: "$rootDir/config/gradle/artifactory.gradle"
+apply from: "$rootDir/gradle/artifactory.gradle"
 
 import org.apache.tools.ant.filters.FixCrLfFilter
 import java.text.SimpleDateFormat;
@@ -17,7 +17,7 @@ ext {
     // General props
     mainClassName = 'org.terasology.engine.Terasology'
     subDirLibs = 'libs'
-    templatesDir = new File(rootDir, 'templates')
+    templatesDir = new File("$rootDir/gradle/templates")
     rootDirDist = new File(rootDir, 'build/distributions')
 
     // Read environment variables, including variables passed by jenkins continuous integration server
@@ -269,6 +269,7 @@ task distModules (type: Sync) {
     }
     */
 }
+
 task distPCZip (type: Zip) {
     dependsOn distApp
     dependsOn distModules

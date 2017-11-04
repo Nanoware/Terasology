@@ -23,11 +23,11 @@ dependencies {
 
 checkstyle {
     ignoreFailures = true
-    configFile = new File(rootDir, 'config/checkstyle/checkstyle.xml')
+    configFile = new File(rootDir, 'gradle/metrics/checkstyle/checkstyle.xml')
     configProperties.samedir = checkstyle.configFile.parentFile
 }
 
 pmd {
     ignoreFailures = true
-    ruleSetFiles = files("$rootDir/config/pmd/pmd.xml")
+    ruleSetFiles = files("$rootDir/gradle/metrics/pmd/pmd.xml")
 }
