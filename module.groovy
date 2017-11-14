@@ -274,9 +274,10 @@ if (args.length == 0) {
                 }
             }
             break
-        case "init"
+        case "init":
                 // TODO: Special case for using the build harness in a solo module workspace.
                 // Should work akin to create but using the workspace root, not modules/$name
+                println "TODO: This will be a way to initialize the build harness into a standalone module"
             break
         default:
             println "UNRECOGNIZED COMMAND - please try again or use 'groovyw module usage' for help"
