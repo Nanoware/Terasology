@@ -38,8 +38,9 @@ public class FirstPersonHeldItemMountPointComponent implements Component, Contro
     public Quat4f rotationQuaternion;
     public float scale = 1f;
 
-    // TODO: @In
-    private final OpenVRProvider vrProvider = OpenVRProvider.getInstance();
+    // TODO: @In - or not, as this triggers some OpenVR initialization regardless of whether VR is enabled or not. Improve?
+    // With this enabled in some scenarios the game may fail to initialize, such as when running environment-based unit tests
+    //private final OpenVRProvider vrProvider = OpenVRProvider.getInstance();
     private boolean trackingDataReceived;
 
 
@@ -67,7 +68,7 @@ public class FirstPersonHeldItemMountPointComponent implements Component, Contro
      * it would in its default state (static location, activation triggered upon use of equipped object).
      */
     public void trySubscribeToControllerPoses() {
-        vrProvider.getState().addControllerListener(this);
+        OpenVRProvider.getInstance().getState().addControllerListener(this);
     }
 
     /**
