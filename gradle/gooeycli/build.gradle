@@ -1,26 +1,15 @@
-
-
 // Copyright 2020 The Terasology Foundation
 // SPDX-License-Identifier: Apache-2.0
 apply plugin: 'groovy'
 
-
-group 'org.terasology'
+group 'org.terasology.cli'
 
 repositories {
     mavenCentral()
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:3.0.4'
+    compile 'org.codehaus.groovy:groovy-all:2.5.10'
     compile 'info.picocli:picocli-groovy:4.3.2'
     compile 'org.fusesource.jansi:jansi:1.18'
-}
-
-sourceSets {
-    main {
-        groovy {
-            srcDir 'groovy'
-        }
-    }
 }
