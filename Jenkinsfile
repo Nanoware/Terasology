@@ -35,4 +35,7 @@ node ("default-java || heavy-java") {
         recordIssues tool: pmdParser(pattern: '**/build/reports/pmd/*.xml')
         recordIssues tool: taskScanner(includePattern: '**/*.java,**/*.groovy,**/*.gradle', lowTags: 'WIBNIF', normalTags: 'TODO', highTags: 'ASAP')
     }
+    stage('Dependencies') {
+        build '../TerasologyModules/H/Health'
+    }
 }
