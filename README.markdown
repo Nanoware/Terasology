@@ -1,3 +1,5 @@
+Test release drafter
+
 # Terasology
 
 [![Gitpod Ready-to-Code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/MovingBlocks/Terasology)
@@ -84,7 +86,6 @@ Direct download stable builds are uploaded to [our release section here on GitHu
 ## Developing
 
 We strive to make developing and modding Terasology as easy as possible.  See our wiki for instructions on [setting up a development environment](https://github.com/MovingBlocks/Terasology/wiki/Dev-Setup) and how to [develop modules](https://github.com/MovingBlocks/Terasology/wiki/Developing-Modules).
-
 
 ## Links
 
