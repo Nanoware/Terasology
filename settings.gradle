@@ -2,6 +2,16 @@ import groovy.io.FileType
 
 rootProject.name = 'Terasology'
 
+buildCache {
+    local {
+        enabled = false
+    }
+    remote(HttpBuildCache) {
+        url = 'http://ark.terasology.net:30500/cache/'
+        push = true
+    }
+}
+
 includeBuild("build-logic")
 include 'engine', 'engine-tests', 'facades', 'metas', 'libs', 'modules'
 
