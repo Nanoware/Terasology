@@ -45,6 +45,12 @@ plugins {
     id "org.jetbrains.gradle.plugin.idea-ext" version "1.0"
 }
 
+if (hasProperty('buildScan')) {
+    buildScan {
+        termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+        termsOfServiceAgree = 'yes'
+    }
+}
 
 import org.gradle.internal.logging.text.StyledTextOutputFactory
 import org.jetbrains.gradle.ext.ActionDelegationConfig
