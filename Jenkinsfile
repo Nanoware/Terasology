@@ -24,7 +24,7 @@ node ("ts-engine && heavy && java8") {
     stage('Build') {
         // Jenkins sometimes doesn't run Gradle automatically in plain console mode, so make it explicit
         withGradle {
-            sh './gradlew --console=plain clean extractConfig extractNatives distForLauncher testDist'
+            sh './gradlew --console=plain clean extractConfig extractNatives distForLauncher testDist --scan'
         }
         archiveArtifacts 'gradlew, gradle/wrapper/*, templates/build.gradle, config/**, facades/PC/build/distributions/Terasology.zip, engine/build/resources/main/org/terasology/version/versionInfo.properties, natives/**, build-logic/src/**, build-logic/*.kts'
     }
@@ -32,7 +32,7 @@ node ("ts-engine && heavy && java8") {
         if (specialBranch) {
             withCredentials([usernamePassword(credentialsId: 'artifactory-gooey', usernameVariable: 'artifactoryUser', passwordVariable: 'artifactoryPass')]) {
                 withGradle {
-                    sh './gradlew --console=plain -Dorg.gradle.internal.publish.checksums.insecure=true publish -PmavenUser=${artifactoryUser} -PmavenPass=${artifactoryPass}'
+                    sh './gradlew --console=plain -Dorg.gradle.internal.publish.checksums.insecure=true publish -PmavenUser=${artifactoryUser} -PmavenPass=${artifactoryPass} --scan'
                 }
             }
         } else {
@@ -52,7 +52,7 @@ node ("ts-engine && heavy && java8") {
     }
     stage('Analytics') {
         withGradle {
-            sh "./gradlew --console=plain check spotbugsmain javadoc"
+            sh "./gradlew --console=plain check spotbugsmain javadoc --scan"
         }
     }
     stage('Record') {
