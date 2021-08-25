@@ -132,7 +132,7 @@ public class TerasologyEngine implements GameEngine {
      * This constructor initializes the engine by initializing its systems, subsystems and managers. It also verifies
      * that some required systems are up and running after they have been initialized.
      *
-     * @param timeSubsystem the timer subsystem
+     * @param TIME the timer subsystem
      * @param subsystems other typical subsystems, e.g., graphics, audio and input subsystems.
      */
     public TerasologyEngine(
