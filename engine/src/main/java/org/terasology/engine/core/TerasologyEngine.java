@@ -135,9 +135,10 @@ public class TerasologyEngine implements GameEngine {
      * @param timeSubsystem the timer subsystem
      * @param subsystems other typical subsystems, e.g., graphics, audio and input subsystems.
      */
-    public TerasologyEngine(TimeSubsystem timeSubsystem, Collection<EngineSubsystem> subsystems) {
-        // configure native paths
-        PathManager.getInstance();
+    public TerasologyEngine(
+TimeSubsystem 
+timeSubsystem
+, Collection<EngineSubsystem> subsystems) { PathManager.getInstance();
         Bullet.init(true, false);
 
         this.rootContext = new ContextImpl();
