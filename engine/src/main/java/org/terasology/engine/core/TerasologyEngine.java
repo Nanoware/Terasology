@@ -137,13 +137,13 @@ public class TerasologyEngine implements GameEngine {
      */
     public TerasologyEngine(
 TimeSubsystem 
-timeSubsystem
+TIME
 , Collection<EngineSubsystem> subsystems) { PathManager.getInstance();
         Bullet.init(true, false);
 
         this.rootContext = new ContextImpl();
         rootContext.put(GameEngine.class, this);
-        this.timeSubsystem = timeSubsystem;
+        this.timeSubsystem = TIME;
 
         //Record and Replay classes
         RecordAndReplayCurrentStatus recordAndReplayCurrentStatus = new RecordAndReplayCurrentStatus();
@@ -164,7 +164,7 @@ timeSubsystem
 
         this.allSubsystems = Queues.newArrayDeque();
         this.allSubsystems.add(new ConfigurationSubsystem());
-        this.allSubsystems.add(timeSubsystem);
+        this.allSubsystems.add(TIME);
         this.allSubsystems.addAll(subsystems);
         this.allSubsystems.add(new ThreadManagerSubsystem());
         this.allSubsystems.add(new MonitoringSubsystem());
