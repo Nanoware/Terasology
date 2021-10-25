@@ -34,7 +34,7 @@ properties([
 
 pipeline {
     agent {
-        label 'ts-engine && heavy && java8'
+        label 'kaniko-precached-jdk8'
     }
     stages {
         // declarative pipeline does `checkout scm` automatically when hitting first stage
